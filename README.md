@@ -2,6 +2,8 @@
 
 I built this n8n workflow to extract important information from PDF contracts and use AI to organize key details that may need the reviewer's attention.
 
+<img width="767" height="228" alt="image" src="https://github.com/user-attachments/assets/826e4601-4909-4d95-8882-528745583a2b" />
+
 ## How it works
 
 1. The user uploads a contract PDF through a form and provides the legal reviewer's email address.
