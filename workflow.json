@@ -1,0 +1,295 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "رفع عقد لتحليله",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "ملف العقد (PDF)",
+              "fieldType": "file",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "بريد المراجع القانوني",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "092fe722-d92b-4bb5-942c-2c53930c8144",
+      "name": "On form submission",
+      "webhookId": "3326b46f-f420-4c60-b289-aa5d8acda6e8"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "___________PDF_",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c5d62729-2adc-4a2c-8389-febdb96e9d9d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=أنت مستشار قانوني. اقرأ نص العقد التالي واستخرج: المبالغ المالية المذكورة، المواعيد والمهل الزمنية المهمة، الالتزامات الرئيسية لكل طرف، والبنود التي تحتاج مراجعة دقيقة (مثل بنود الفسخ، الغرامات، الحصرية، أو أي صياغة غامضة). أعد النتيجة كـ JSON فقط بدون أي نص إضافي: {\"amounts\": [\"...\"], \"key_dates\": [\"...\"], \"obligations\": [\"...\"], \"needs_review\": [{\"clause\": \"...\", \"reason\": \"...\"}], \"overall_risk\": \"منخفض/متوسط/عالي\"}\n\nنص العقد:\n{{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "7e2e19ed-80c7-4efb-8f77-6f464a9051f8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        240
+      ],
+      "id": "0ff22652-9ee9-4161-a8cb-5fac3483008a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Kwmp4ZGKEUrYRkMk",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw =$input.first().json.output;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\nreturn [{ json: { ...parsed, reviewerEmail:$('On form submission').first().json['بريد المراجع القانوني'] }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "bbd99769-800a-41d4-ae1e-528cce2895f3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1_01RyPcy_NbktYOCt4NkFw-S0VlKcpKS76IFVcQj7vE",
+          "mode": "list",
+          "cachedResultName": "Contract Analysis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_01RyPcy_NbktYOCt4NkFw-S0VlKcpKS76IFVcQj7vE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_01RyPcy_NbktYOCt4NkFw-S0VlKcpKS76IFVcQj7vE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "amounts": "={{ $json.amounts }}",
+            "keyDates": "={{ $json.key_dates }}",
+            "obligations": "={{ $json.obligations }}",
+            "overallRisk": "={{ $json.overall_risk }}",
+            "analyzedAt": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "amounts",
+              "displayName": "amounts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "keyDates",
+              "displayName": "keyDates",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "obligations",
+              "displayName": "obligations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "overallRisk",
+              "displayName": "overallRisk",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "analyzedAt",
+              "displayName": "analyzedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "184c806c-3333-41ab-8ac1-7e885bdef081",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JbFX4pqveR1eicFw",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['بريد المراجع القانوني'] }}",
+        "subject": "=تقرير تحليل العقد - درجة الخطورة: {{ $('Code in JavaScript').item.json.overall_risk }}",
+        "message": "=<div style=\"font-family: Arial, sans-serif; direction: rtl; text-align: right; line-height: 1.8; color: #222;\">\n\n  <h2 style=\"margin-bottom: 16px;\">تقرير تحليل العقد</h2>\n\n  <p>تم تحليل العقد المرفوع بنجاح.</p>\n\n  <h3>💰 المبالغ المذكورة</h3>\n  <p>\n    {{ $('Code in JavaScript').item.json.amounts.join(', ') }}\n  </p>\n\n  <h3>📅 المواعيد المهمة</h3>\n  <p>\n    {{ $('Code in JavaScript').item.json.key_dates.join(', ') }}\n  </p>\n\n  <h3>📋 الالتزامات الرئيسية</h3>\n  <ul>\n    {{ $('Code in JavaScript').item.json.obligations.map(o => '<li>' + o + '</li>').join('') }}\n  </ul>\n\n  <h3>⚠️ بنود تحتاج مراجعة</h3>\n  <ul>\n    {{ $('Code in JavaScript').item.json.needs_review.map(r => '<li><strong>' + r.clause + '</strong><br>' + r.reason + '</li>').join('') }}\n  </ul>\n\n  <h3>درجة الخطورة الإجمالية</h3>\n\n  <p style=\"font-size: 18px;\">\n    <strong>\n      {{ $('Code in JavaScript').item.json.overall_risk }}\n    </strong>\n  </p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "ae0bad7e-1065-454a-bb3f-091b4800417f",
+      "name": "Send a message",
+      "webhookId": "89704302-fb61-4b8b-b8bc-4e3da7959af9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GBOwP5vuIWZCUVoZ",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fc3f7677-7b09-4db6-96ef-fb7e7b29ad59",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c7bc4a3d36cd56b129e06f6ace008ba13cc277cac4ebef4f9536c8399431917b"
+  },
+  "nodeGroups": [],
+  "id": "z3i5GPPI7Q7o1Tj3",
+  "tags": []
+}
